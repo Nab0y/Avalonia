@@ -67,6 +67,10 @@ namespace Avalonia.Native
         public void SetWindowManagerAddShadowHint(bool enabled)
         {
         }
+        
+        public void SetIsLightDismissEnabledHint(bool enabled)
+        {
+        }
 
         public IPopupPositioner PopupPositioner { get; }
     }

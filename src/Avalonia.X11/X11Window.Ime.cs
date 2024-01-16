@@ -95,7 +95,7 @@ namespace Avalonia.X11
                 (ulong)_x11.LastActivityTimestamp.ToInt64(),
                 InputRoot,
                 forwardedKey.Type,
-                X11KeyTransform.KeyFromX11Key(x11Key),
+                XkbKeyTransform.ConvertKey((XkbKey)forwardedKey.KeyVal),
                 (RawInputModifiers)forwardedKey.Modifiers,
                 PhysicalKey.None,
                 keySymbol));
@@ -105,6 +105,7 @@ namespace Avalonia.X11
 
         private void HandleKeyEvent(ref XEvent ev)
         {
+            //todo: nab0y check and fix
             var physicalKey = X11KeyTransform.PhysicalKeyFromScanCode(ev.KeyEvent.keycode);
             var (x11Key, key, symbol) = LookupKey(ref ev.KeyEvent, physicalKey);
             var modifiers = TranslateModifiers(ev.KeyEvent.state);

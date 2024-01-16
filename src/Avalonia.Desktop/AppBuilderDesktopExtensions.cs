@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Compatibility;
 using Avalonia.Controls;
 using Avalonia.Logging;
@@ -27,8 +28,16 @@ namespace Avalonia
             }
             else if (OperatingSystemEx.IsLinux())
             {
-                LoadX11(builder);
-                LoadSkia(builder);
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY")))
+                {
+                    LoadWayland(builder);
+                    LoadSkia(builder);
+                }
+                else
+                {
+                    LoadX11(builder);
+                    LoadSkia(builder);
+                }
             }
             else
             {
@@ -43,6 +52,9 @@ namespace Avalonia
              => builder.UseAvaloniaNative();
         static void LoadWin32(AppBuilder builder)
              => builder.UseWin32();
+        
+        static void LoadWayland(AppBuilder builder)
+            => builder.UseWayland();
 
         static void LoadX11(AppBuilder builder)
              => builder.UseX11();

@@ -48,6 +48,10 @@ namespace Avalonia.DesignerSupport.Remote
         public Action<WindowTransparencyLevel> TransparencyLevelChanged { get; set; }        
 
         public Action<bool> ExtendClientAreaToDecorationsChanged { get; set; }
+        
+        public SystemDecorations RequestedManagedDecorations => SystemDecorations.None;
+
+        public Action<SystemDecorations> RequestedManagedDecorationsChanged { get; set; }
 
         public Thickness ExtendedMargins { get; } = new Thickness();
 
@@ -180,6 +184,10 @@ namespace Avalonia.DesignerSupport.Remote
         public void SetTransparencyLevelHint(IReadOnlyList<WindowTransparencyLevel> transparencyLevel) { }
 
         public void SetWindowManagerAddShadowHint(bool enabled)
+        {
+        }
+        
+        public void SetIsLightDismissEnabledHint(bool enabled)
         {
         }
 

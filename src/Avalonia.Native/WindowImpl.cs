@@ -102,6 +102,10 @@ namespace Avalonia.Native
         public Action<WindowState> WindowStateChanged { get; set; }        
 
         public Action<bool> ExtendClientAreaToDecorationsChanged { get; set; }
+        
+        public Controls.SystemDecorations RequestedManagedDecorations { get; }
+
+        public Action<Controls.SystemDecorations> RequestedManagedDecorationsChanged { get; set; }
 
         public Thickness ExtendedMargins { get; private set; }
 
@@ -194,9 +198,6 @@ namespace Avalonia.Native
 
             ExtendClientAreaToDecorationsChanged?.Invoke(_isExtended);
         }
-
-        /// <inheritdoc/>
-        public bool NeedsManagedDecorations => false;
 
         public void ShowTaskbarIcon(bool value)
         {

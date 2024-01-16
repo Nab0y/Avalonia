@@ -6,6 +6,7 @@ using Avalonia.Compatibility;
 using Avalonia.Platform.Interop;
 using SkiaSharp;
 using BindingFlags = System.Reflection.BindingFlags;
+using CondeAnalysis = System.Diagnostics.CodeAnalysis; 
 
 namespace Avalonia.Skia.Metal;
 

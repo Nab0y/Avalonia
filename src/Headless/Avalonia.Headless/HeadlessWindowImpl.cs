@@ -248,6 +248,8 @@ namespace Avalonia.Headless
         public bool IsClientAreaExtendedToDecorations => false;
 
         public Action<bool>? ExtendClientAreaToDecorationsChanged { get; set; }
+        public SystemDecorations RequestedManagedDecorations => SystemDecorations.None;
+        public Action<SystemDecorations>? RequestedManagedDecorationsChanged { get; set; }
 
         public bool NeedsManagedDecorations => false;
 
@@ -360,6 +362,11 @@ namespace Avalonia.Headless
         }
 
         public void SetWindowManagerAddShadowHint(bool enabled)
+        {
+            
+        }
+        
+        public void SetIsLightDismissEnabledHint(bool enabled)
         {
             
         }

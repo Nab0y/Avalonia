@@ -75,8 +75,8 @@ namespace Avalonia.Win32
                             using (var ms = new MemoryStream(data))
                             {
                                 ms.Position = DataObject.SerializedObjectGUID.Length;
-                                BinaryFormatter binaryFormatter = new BinaryFormatter();
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
+                                BinaryFormatter binaryFormatter = new BinaryFormatter();
                                 return binaryFormatter.Deserialize(ms);
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
                             }

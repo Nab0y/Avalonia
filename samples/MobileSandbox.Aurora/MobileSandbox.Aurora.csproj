@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+
+        <PublishAot>true</PublishAot>
+        <PublishTrimmed>true</PublishTrimmed>
+    </PropertyGroup>
+
+    <!-- Need for build rpm-->
+    <PropertyGroup>
+        <SkipRpmDependencies>true</SkipRpmDependencies>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="runtime.linux-arm64.Microsoft.DotNet.ILCompiler" Version="8.0.1" />
+    </ItemGroup>
+
+    <!-- Need for build rpm-->
+    <ItemGroup>
+      <PackageReference Include="Packaging.Targets" Version="0.1.*" />
+    </ItemGroup>
+  
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Avalonia.Diagnostics\Avalonia.Diagnostics.csproj" />
+      <ProjectReference Include="..\..\src\Avalonia.Dialogs\Avalonia.Dialogs.csproj" />
+      <ProjectReference Include="..\MobileSandbox\MobileSandbox.csproj" />
+    </ItemGroup>
+
+    <Import Project="..\..\build\SampleApp.props" />
+    <Import Project="..\..\build\ReferenceCoreLibraries.props" />
+</Project>
