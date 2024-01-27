@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -8,6 +8,7 @@
     <ProjectReference Include="../../src/Skia/Avalonia.Skia/Avalonia.Skia.csproj" />
     <ProjectReference Include="../../src/Avalonia.Native/Avalonia.Native.csproj" />
     <ProjectReference Include="../../packages/Avalonia/Avalonia.csproj" />
+    <ProjectReference Include="../Aurora/Avalonia.Aurora/Avalonia.Aurora.csproj" />
     <ProjectReference Include="../Avalonia.Wayland/Avalonia.Wayland.csproj" />
     <ProjectReference Include="../Avalonia.X11/Avalonia.X11.csproj" />
   </ItemGroup>

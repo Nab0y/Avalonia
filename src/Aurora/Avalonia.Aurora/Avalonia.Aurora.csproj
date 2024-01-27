@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+<!--        <Nullable>enable</Nullable>-->
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PackageId>Avalonia.Aurora</PackageId>
+    </PropertyGroup>
+
+<!--    <ItemGroup>-->
+<!--      <PackageReference Include="NWayland" Version="0.0.1" />-->
+<!--    </ItemGroup>-->
+  
+    <ItemGroup>
+      <ProjectReference Include="..\..\Avalonia.FreeDesktop\Avalonia.FreeDesktop.csproj" />
+      <ProjectReference Include="..\..\Avalonia.OpenGL\Avalonia.OpenGL.csproj" />
+    </ItemGroup>
+
+    <Import Project="../../../build/TrimmingEnable.props" />
+    <Import Project="../../../build/NullableEnable.props" />
+</Project>

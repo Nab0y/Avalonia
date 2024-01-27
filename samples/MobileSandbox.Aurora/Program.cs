@@ -14,7 +14,8 @@ class Program
     public static AppBuilder BuildAvaloniaApp()
     {
         return AppBuilder.Configure<App>()
-            .UseWayland()
+            .UseAuroraWayland()
+            //.UseWayland()
             .UseSkia()
             .LogToTrace();
     }
