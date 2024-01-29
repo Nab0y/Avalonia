@@ -1,5 +1,6 @@
 using Avalonia.Platform;
-using WaylandSharp;
+using NWayland.Interop;
+using NWayland.Protocols.Aurora.Wayland;
 
 namespace Avalonia.Aurora.Wayland;
 
@@ -53,12 +54,14 @@ internal class WlScreens : IScreenImpl, IDisposable
 
     private void OnGlobalAdded(WlRegistryHandler.GlobalInfo globalInfo)
     {
-        if (globalInfo.Interface != WlInterface.WlOutput.Name)
+        if (globalInfo.Interface != WlOutput.InterfaceName)
         {
             return;
         }
 
-        var wlOutput = _platform.WlRegistryHandler.BindRequiredInterface<WlOutput>(WlInterface.WlOutput.Version, globalInfo);
+        var wlOutput =
+            _platform.WlRegistryHandler.BindRequiredInterface(WlOutput.BindFactory, WlOutput.InterfaceVersion,
+                globalInfo);
         _wlOutputs.Add(globalInfo.Name, wlOutput);
         var wlScreen = new WlScreen(wlOutput, _screens);
         _wlScreens.Add(wlOutput, wlScreen);
@@ -66,7 +69,7 @@ internal class WlScreens : IScreenImpl, IDisposable
 
     private void OnGlobalRemoved(WlRegistryHandler.GlobalInfo globalInfo)
     {
-        if (globalInfo.Interface != WlInterface.WlOutput.Name ||
+        if (globalInfo.Interface is not WlOutput.InterfaceName ||
             !_wlOutputs.TryGetValue(globalInfo.Name, out var wlOutput) ||
             !_wlScreens.TryGetValue(wlOutput, out var wlScreen))
         {
@@ -77,7 +80,7 @@ internal class WlScreens : IScreenImpl, IDisposable
         wlScreen.Dispose();
     }
 
-    internal sealed class WlScreen : IDisposable
+    internal sealed class WlScreen : WlOutput.IEvents, IDisposable
     {
         private readonly WlOutput _wlOutput;
         private readonly List<Screen> _screens;
@@ -90,53 +93,50 @@ internal class WlScreens : IScreenImpl, IDisposable
         {
             _wlOutput = wlOutput;
             _screens = screens;
-            _wlOutput.Geometry += WlOutputOnGeometry;
-            _wlOutput.Mode += WlOutputOnMode;
-            _wlOutput.Scale += WlOutputOnScale;
-            _wlOutput.Done += WlOutputOnDone;
+            wlOutput.Events = this;
         }
 
-        private void WlOutputOnDone(object? sender, WlOutput.DoneEventArgs e)
+        public Screen? Screen { get; private set; }
+
+        public void OnMode(WlOutput eventSender, WlOutput.ModeEnum flags, int width, int height, int refresh)
+        {
+        }
+
+        public void OnScale(WlOutput eventSender, int factor)
+        {
+            _scaling = factor;
+        }
+
+        public void OnName(WlOutput eventSender, string name) { }
+
+        public void OnDescription(WlOutput eventSender, string description) { }
+
+        public void OnGeometry(WlOutput eventSender, int x, int y, int physicalWidth, int physicalHeight, int subpixel,
+            string make,
+            string model, int transform)
+        {
+            _position = new PixelPoint(x, y);
+        }
+
+        public void OnMode(WlOutput eventSender, uint fl, int width, int height, int refresh)
+        {
+            var flags = (WlOutput.ModeEnum)fl;
+            if (flags.HasAllFlags(WlOutput.ModeEnum.Current))
+                _size = new PixelSize(width, height);
+        }
+
+        public void OnDone(WlOutput eventSender)
         {
             if (Screen is not null)
-            {
                 _screens.Remove(Screen);
-            }
-
             Screen = new Screen(_scaling, new PixelRect(_position, _size), new PixelRect(_position, _size), false);
             _screens.Add(Screen);
         }
 
-        private void WlOutputOnScale(object? sender, WlOutput.ScaleEventArgs e)
-        {
-            _scaling = e.Factor;
-        }
-
-        private void WlOutputOnMode(object? sender, WlOutput.ModeEventArgs e)
-        {
-            if (((WlOutputMode)e.Flags).HasAllFlags(WlOutputMode.Current))
-            {
-                _size = new PixelSize(e.Width, e.Height);
-            }
-        }
-
-        private void WlOutputOnGeometry(object? sender, WlOutput.GeometryEventArgs e)
-        {
-            _position = new PixelPoint(e.X, e.Y);
-        }
-
-        public Screen? Screen { get; private set; }
-        
         public void Dispose()
         {
             if (Screen is not null)
-            {
                 _screens.Remove(Screen);
-            }
-            _wlOutput.Done -= WlOutputOnDone;
-            _wlOutput.Geometry -= WlOutputOnGeometry;
-            _wlOutput.Mode -= WlOutputOnMode;
-            _wlOutput.Scale -= WlOutputOnScale;
             _wlOutput.Dispose();
         }
     }

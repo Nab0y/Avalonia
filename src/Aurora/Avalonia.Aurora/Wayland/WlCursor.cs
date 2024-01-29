@@ -1,37 +1,38 @@
 using Avalonia.Platform;
-using WaylandSharp;
+using NWayland.Protocols.Aurora.Wayland;
 
-namespace Avalonia.Aurora.Wayland;
-
-internal abstract class WlCursor : ICursorImpl
+namespace Avalonia.Aurora.Wayland
 {
-    protected WlCursor(uint imageCount)
+    internal abstract class WlCursor : ICursorImpl
     {
-        ImageCount = imageCount;
-    }
-
-    public abstract WlCursorImage this[int index] { get; }
-
-    public uint ImageCount { get; }
-
-    public abstract void Dispose();
-
-    public class WlCursorImage
-    {
-        public WlCursorImage(WlBuffer wlBuffer, PixelSize size, PixelPoint hotspot, TimeSpan delay)
+        protected WlCursor(uint imageCount)
         {
-            WlBuffer = wlBuffer;
-            Size = size;
-            Hotspot = hotspot;
-            Delay = delay;
+            ImageCount = imageCount;
         }
 
-        public WlBuffer WlBuffer { get; }
+        public abstract WlCursorImage this[int index] { get; }
 
-        public PixelSize Size { get; }
+        public uint ImageCount { get; }
 
-        public PixelPoint Hotspot { get; }
+        public abstract void Dispose();
 
-        public TimeSpan Delay { get; }
+        public class WlCursorImage
+        {
+            public WlCursorImage(WlBuffer wlBuffer, PixelSize size, PixelPoint hotspot, TimeSpan delay)
+            {
+                WlBuffer = wlBuffer;
+                Size = size;
+                Hotspot = hotspot;
+                Delay = delay;
+            }
+
+            public WlBuffer WlBuffer { get; }
+
+            public PixelSize Size { get; }
+
+            public PixelPoint Hotspot { get; }
+
+            public TimeSpan Delay { get; }
+        }
     }
 }

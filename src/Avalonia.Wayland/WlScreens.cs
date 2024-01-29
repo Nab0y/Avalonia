@@ -63,7 +63,9 @@ namespace Avalonia.Wayland
 
         private void OnGlobalRemoved(WlRegistryHandler.GlobalInfo globalInfo)
         {
-            if (globalInfo.Interface is not WlOutput.InterfaceName || !_wlOutputs.TryGetValue(globalInfo.Name, out var wlOutput) || !_wlScreens.TryGetValue(wlOutput, out var wlScreen))
+            if (globalInfo.Interface is not WlOutput.InterfaceName 
+                || !_wlOutputs.TryGetValue(globalInfo.Name, out var wlOutput) 
+                || !_wlScreens.TryGetValue(wlOutput, out var wlScreen))
                 return;
             _wlScreens.Remove(wlOutput);
             wlScreen.Dispose();

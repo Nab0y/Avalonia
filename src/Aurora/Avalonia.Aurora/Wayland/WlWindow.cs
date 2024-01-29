@@ -8,33 +8,33 @@ using Avalonia.Input.TextInput;
 using Avalonia.OpenGL.Egl;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
-using WaylandSharp;
+using NWayland.Protocols.Aurora.Wayland;
 
 namespace Avalonia.Aurora.Wayland;
 
-internal abstract class WlWindow : IWindowBaseImpl
+internal abstract class WlWindow : IWindowBaseImpl, WlSurface.IEvents
 {
     private readonly AvaloniaAuroraWaylandPlatform _platform;
     private readonly WlFramebufferSurface _wlFramebufferSurface;
+
     private readonly WlEglGlPlatformSurface? _wlEglGlPlatformSurface;
+
     //private readonly WpViewport? _wpViewport;
     // private readonly WpFractionalScaleV1? _wpFractionalScale;
     private readonly object _resizeLock = new();
 
     private bool _didReceiveInitialConfigure;
     private WlCallback? _frameCallback;
-    private WlCallback? _syncCallback;
 
     internal State PendingState = default;
     internal State AppliedState = default;
 
     internal struct State
     {
-        //public uint ConfigureSerial;
+        public int VisibleState;
         public PixelSize Size = new(720, 1280);
-        //public PixelSize Bounds;
         public PixelPoint Position = default;
-        public WindowState WindowState = WindowState.Normal;
+        public WindowState WindowState = WindowState.FullScreen;
         public bool HasWindowDecorations = false;
         public bool Activated = false;
 
@@ -47,16 +47,7 @@ internal abstract class WlWindow : IWindowBaseImpl
     {
         _platform = platform;
         WlSurface = platform.WlCompositor.CreateSurface();
-        
-        WlSurface.Enter += OnEnter;
-        WlSurface.Leave += OnLeave;
-
-        // if (platform.WpViewporter is not null && platform.WpFractionalScaleManager is not null)
-        // {
-        //     _wpViewport = platform.WpViewporter.GetViewport(WlSurface);
-        //     _wpFractionalScale = platform.WpFractionalScaleManager.GetFractionalScale(WlSurface);
-        //     _wpFractionalScale.Events = this;
-        // }
+        WlSurface.Events = this;
 
         var surfaces = new List<object>(2);
 
@@ -74,19 +65,6 @@ internal abstract class WlWindow : IWindowBaseImpl
         Surfaces = surfaces.ToArray();
 
         platform.WlScreens.AddWindow(this);
-    }
-
-    private void OnLeave(object? sender, WlSurface.LeaveEventArgs e)
-    {
-        WlOutput = e.Output;
-    }
-
-    private void OnEnter(object? sender, WlSurface.EnterEventArgs e)
-    {
-        if (WlOutput != null && WlOutput.Equals(e.Output))
-        {
-            WlOutput = null;
-        }
     }
 
     public IPlatformHandle Handle => null!;
@@ -150,9 +128,11 @@ internal abstract class WlWindow : IWindowBaseImpl
 
     public void SetInputRoot(IInputRoot inputRoot) => InputRoot = inputRoot;
 
-    public Point PointToClient(PixelPoint point) => new((point.X - Position.X) / RenderScaling, (point.Y - Position.Y) / RenderScaling);
+    public Point PointToClient(PixelPoint point) =>
+        new((point.X - Position.X) / RenderScaling, (point.Y - Position.Y) / RenderScaling);
 
-    public PixelPoint PointToScreen(Point point) => new((int)(point.X * RenderScaling + Position.X), (int)(point.Y * RenderScaling + Position.Y));
+    public PixelPoint PointToScreen(Point point) => new((int)(point.X * RenderScaling + Position.X),
+        (int)(point.Y * RenderScaling + Position.Y));
 
     public void SetCursor(ICursorImpl? cursor) => _platform.WlInputDevice.PointerHandler?.SetCursor(cursor as WlCursor);
 
@@ -176,25 +156,8 @@ internal abstract class WlWindow : IWindowBaseImpl
 
     public virtual void Show(bool activate, bool isDialog)
     {
-        // interface implementation
-    }
-
-    public async Task ShowAsync(bool activate, bool isDialog)
-    {
         WlSurface.Commit();
-        var count = _platform.WlDisplay.Roundtrip();
-        _syncCallback = _platform.WlDisplay.Sync();
-        _syncCallback.Done += SyncCallbackOnDone;
-
-        while (_syncCallback != null)
-        {
-            await Task.Delay(5);
-        }
-    }
-    
-    private void SyncCallbackOnDone(object? sender, WlCallback.DoneEventArgs e)
-    {
-        DisposeSyncCallback();
+        _platform.WlDisplay.Roundtrip();
     }
 
     public abstract void Hide();
@@ -219,23 +182,7 @@ internal abstract class WlWindow : IWindowBaseImpl
             return _platform.WlInputDevice;
         return null;
     }
-    
-    
 
-    // public void OnConfigure(XdgSurface eventSender, uint serial)
-    // {
-    //     if (AppliedState.ConfigureSerial == serial)
-    //         return;
-    //
-    //     PendingState.ConfigureSerial = serial;
-    //
-    //     lock (_resizeLock)
-    //     {
-    //         XdgSurface.AckConfigure(serial);
-    //         ApplyConfigure();
-    //     }
-    // }
-    
     protected virtual void ApplyConfigure()
     {
         var didResize = AppliedState.Size != PendingState.Size;
@@ -258,29 +205,9 @@ internal abstract class WlWindow : IWindowBaseImpl
         else if (didResize && _frameCallback is null)
         {
             _frameCallback = WlSurface.Frame();
-            _frameCallback.Done += FrameCallbackOnDone;
             DoPaint();
         }
     }
-
-    private void FrameCallbackOnDone(object? sender, WlCallback.DoneEventArgs e)
-    {
-        DisposeFrameCallback();
-        DoPaint();
-    }
-
-    private void DisposeSyncCallback()
-    {
-        if (_syncCallback == null)
-        {
-            return;
-        }
-        _syncCallback.Done -= SyncCallbackOnDone;
-        _syncCallback.Dispose();
-        _syncCallback = null;
-    }
-
-    
 
     private void DisposeFrameCallback()
     {
@@ -288,7 +215,7 @@ internal abstract class WlWindow : IWindowBaseImpl
         {
             return;
         }
-        _frameCallback.Done -= FrameCallbackOnDone;
+
         _frameCallback.Dispose();
         _frameCallback = null;
     }
@@ -297,13 +224,10 @@ internal abstract class WlWindow : IWindowBaseImpl
     {
         Closed?.Invoke();
         _platform.WlScreens.RemoveWindow(this);
-        DisposeSyncCallback();
         DisposeFrameCallback();
         _wlFramebufferSurface.Dispose();
         _wlEglGlPlatformSurface?.Dispose();
-        
-        WlSurface.Enter -= OnEnter;
-        WlSurface.Leave -= OnLeave;
+
         WlSurface.Dispose();
     }
 
@@ -312,7 +236,6 @@ internal abstract class WlWindow : IWindowBaseImpl
         lock (_resizeLock)
         {
             Resized?.Invoke(ClientSize, WindowResizeReason.Application);
-            //_wpViewport?.SetDestination(AppliedState.Size.Width, AppliedState.Size.Height);
             TryApplyTransparencyLevel(TransparencyLevel);
             Paint?.Invoke(default);
         }
@@ -327,13 +250,30 @@ internal abstract class WlWindow : IWindowBaseImpl
             WlSurface.SetOpaqueRegion(region);
             return true;
         }
-        
+
         if (transparencyLevel == WindowTransparencyLevel.Transparent)
         {
-            //WlSurface.SetOpaqueRegion(null); // check
+            WlSurface.SetOpaqueRegion(null);
             return true;
         }
 
         return false;
+    }
+
+    public void OnEnter(WlSurface eventSender, WlOutput output)
+    {
+        Console.WriteLine("WlSurface OnEnter");
+
+        if (WlOutput != null && WlOutput.Equals(output))
+        {
+            WlOutput = null;
+        }
+    }
+
+    public void OnLeave(WlSurface eventSender, WlOutput output)
+    {
+        Console.WriteLine("WlSurface OnLeave");
+
+        WlOutput = output;
     }
 }

@@ -15,10 +15,11 @@ internal class WlEglGlPlatformSurface : EglGlPlatformSurfaceBase, IDisposable
 
     public override IGlPlatformSurfaceRenderTarget CreateGlRenderTarget(IGlContext context)
     {
+        Console.WriteLine("CreateGlRenderTarget");
         var eglContext = (EglContext)context;
         if (_info.Handle == IntPtr.Zero)
         {
-            _info.Handle = LibWaylandEgl.wl_egl_window_create(_info.WlWindow.WlSurface.RawPointer, _info.Size.Width,
+            _info.Handle = LibWaylandEgl.wl_egl_window_create(_info.WlWindow.WlSurface.Handle, _info.Size.Width,
                 _info.Size.Height);
         }
         var glSurface = eglContext.Display.CreateWindowSurface(_info.Handle);

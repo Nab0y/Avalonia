@@ -1,19 +1,20 @@
+using Avalonia.Aurora.DBus;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform;
-using Avalonia.Platform.Storage;
-using WaylandSharp;
+using NWayland.Protocols.Aurora.SurfaceExtension;
+using NWayland.Protocols.Aurora.Wayland;
+using Tmds.DBus.Protocol;
 
 namespace Avalonia.Aurora.Wayland;
 
-internal class WlToplevel : WlWindow, IWindowImpl
+internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExtendedSurface.IEvents
 {
     private readonly AvaloniaAuroraWaylandPlatform _platform;
 
     private WlShellSurface? _wlShellSurface;
+    private QtExtendedSurface? _qtExtendedSurface;
     private string? _title;
-    private PixelSize _minSize;
-    private PixelSize _maxSize;
     private bool _extendIntoClientArea;
     private SystemDecorations _systemDecorations = SystemDecorations.Full;
 
@@ -71,10 +72,16 @@ internal class WlToplevel : WlWindow, IWindowImpl
 
     public override async void Show(bool activate, bool isDialog)
     {
+        var dbusDeviceInfo = new RuOmpDBusDeviceInfo(Connection.System);
+        PendingState.Size = await dbusDeviceInfo.GetScreenResolutionAsync();
+        Console.WriteLine($"screenResolution - {PendingState.Size}");
+        
+        _qtExtendedSurface = _platform.QtSurfaceExtension.GetExtendedSurface(WlSurface);
+        _qtExtendedSurface.Events = this;
+        Console.WriteLine($"_qtExtendedSurface ver - {_qtExtendedSurface.Version}");
+        
         _wlShellSurface = _platform.WlShell.GetShellSurface(WlSurface);
-        _wlShellSurface.Configure += OnConfigure;
-        _wlShellSurface.Ping += OnPing;
-        _wlShellSurface.PopupDone += WlShellSurfaceOnPopupDone;
+        _wlShellSurface.Events = this;
         
         _wlShellSurface.SetToplevel();
         
@@ -83,21 +90,10 @@ internal class WlToplevel : WlWindow, IWindowImpl
             _wlShellSurface.SetTitle(_title);
         }
 
-        //base.Show(activate, isDialog);
-        await ShowAsync(activate, isDialog);
+        base.Show(activate, isDialog);
+        //await ShowAsync(activate, isDialog);
     }
 
-    private void WlShellSurfaceOnPopupDone(object? sender, WlShellSurface.PopupDoneEventArgs e)
-    {
-        
-    }
-
-    private void OnPing(object? sender, WlShellSurface.PingEventArgs e)
-    {
-        ((WlShellSurface)sender!).Pong(e.Serial);
-    }
-
-    
 
     private void DisposeWlShellSurface()
     {
@@ -105,10 +101,6 @@ internal class WlToplevel : WlWindow, IWindowImpl
         {
             return;
         }
-        
-        _wlShellSurface.PopupDone -= WlShellSurfaceOnPopupDone;
-        _wlShellSurface.Configure -= OnConfigure;
-        _wlShellSurface.Ping -= OnPing;
         _wlShellSurface.Dispose();
         _wlShellSurface = null;
     }
@@ -135,7 +127,7 @@ internal class WlToplevel : WlWindow, IWindowImpl
         }
 
         //todo: nab0y
-        _wlShellSurface.SetPopup(_platform.WlSeat, _platform.WlInputDevice.Serial, wlToplevel.WlSurface, 0, 0, (uint)WlShellSurfaceTransient.Inactive);
+        _wlShellSurface.SetPopup(_platform.WlSeat, _platform.WlInputDevice.Serial, wlToplevel.WlSurface, 0, 0, (uint)WlShellSurface.TransientEnum.Inactive);
         
         Parent = wlToplevel;
     }
@@ -154,32 +146,17 @@ internal class WlToplevel : WlWindow, IWindowImpl
 
     public void ShowTaskbarIcon(bool value) { } // Impossible on Wayland.
 
-    public void CanResize(bool value)
-    {
-        //todo: nab0y
-        // if (value)
-        // {
-        //     _xdgToplevel?.SetMinSize(_minSize.Width, _minSize.Height);
-        //     _xdgToplevel?.SetMaxSize(_maxSize.Width, _maxSize.Height);
-        // }
-        // else
-        // {
-        //     _xdgToplevel?.SetMinSize(AppliedState.Size.Width, AppliedState.Size.Height);
-        //     _xdgToplevel?.SetMaxSize(AppliedState.Size.Width, AppliedState.Size.Height);
-        // }
-    }
+    public void CanResize(bool value) { }
 
     public void BeginMoveDrag(PointerPressedEventArgs e)
     {
         _wlShellSurface?.Move(_platform.WlSeat, _platform.WlInputDevice.Serial);
-        //_xdgToplevel?.Move(_platform.WlSeat, _platform.WlInputDevice.Serial);
         e.Pointer.Capture(null);
     }
 
     public void BeginResizeDrag(WindowEdge edge, PointerPressedEventArgs e)
     {
         _wlShellSurface?.Resize(_platform.WlSeat, _platform.WlInputDevice.Serial, (uint)ParseWindowEdges(edge));
-        //_xdgToplevel?.Resize(_platform.WlSeat, _platform.WlInputDevice.Serial, ParseWindowEdges(edge));
         e.Pointer.Capture(null);
     }
 
@@ -187,12 +164,12 @@ internal class WlToplevel : WlWindow, IWindowImpl
 
     public void SetMinMaxSize(Size minSize, Size maxSize)
     {
-        var minX = double.IsInfinity(minSize.Width) ? 0 : (int)minSize.Width;
-        var minY = double.IsInfinity(minSize.Height) ? 0 : (int)minSize.Height;
-        var maxX = double.IsInfinity(maxSize.Width) ? 0 : (int)maxSize.Width;
-        var maxY = double.IsInfinity(maxSize.Height) ? 0 : (int)maxSize.Height;
-        _minSize = new PixelSize(minX, minY);
-        _maxSize = new PixelSize(maxX, maxY);
+        // var minX = double.IsInfinity(minSize.Width) ? 0 : (int)minSize.Width;
+        // var minY = double.IsInfinity(minSize.Height) ? 0 : (int)minSize.Height;
+        // var maxX = double.IsInfinity(maxSize.Width) ? 0 : (int)maxSize.Width;
+        // var maxY = double.IsInfinity(maxSize.Height) ? 0 : (int)maxSize.Height;
+        // _minSize = new PixelSize(minX, minY);
+        // _maxSize = new PixelSize(maxX, maxY);
     }
 
     public void SetExtendClientAreaToDecorationsHint(bool extendIntoClientAreaHint)
@@ -209,14 +186,6 @@ internal class WlToplevel : WlWindow, IWindowImpl
         _extendedMargins = titleBarHeight is -1 ? s_windowDecorationThickness : new Thickness(0, titleBarHeight, 0, 0);
     }
 
-    private void OnConfigure(object? sender, WlShellSurface.ConfigureEventArgs e)
-    {
-        
-        var size = new PixelSize(e.Width, e.Height);
-        if (size != default)
-            PendingState.Size = size;
-    }
-    
     // public void OnConfigure(XdgToplevel eventSender, int width, int height, ReadOnlySpan<XdgToplevel.StateEnum> states)
     // {
     //     PendingState.WindowState = WindowState.Normal;
@@ -251,6 +220,7 @@ internal class WlToplevel : WlWindow, IWindowImpl
 
     public override void Dispose()
     {
+        _qtExtendedSurface?.Dispose();
         DisposeWlShellSurface();
         base.Dispose();
     }
@@ -272,16 +242,68 @@ internal class WlToplevel : WlWindow, IWindowImpl
 
     private static readonly Thickness s_windowDecorationThickness = new(0, 30, 0, 0);
 
-    private static WlShellSurfaceResize ParseWindowEdges(WindowEdge windowEdge) => windowEdge switch
+    private static WlShellSurface.ResizeEnum ParseWindowEdges(WindowEdge windowEdge) => windowEdge switch
     {
-        WindowEdge.North => WlShellSurfaceResize.Top,
-        WindowEdge.NorthEast => WlShellSurfaceResize.TopRight,
-        WindowEdge.East => WlShellSurfaceResize.Right,
-        WindowEdge.SouthEast => WlShellSurfaceResize.BottomRight,
-        WindowEdge.South => WlShellSurfaceResize.Bottom,
-        WindowEdge.SouthWest => WlShellSurfaceResize.BottomLeft,
-        WindowEdge.West => WlShellSurfaceResize.Left,
-        WindowEdge.NorthWest => WlShellSurfaceResize.TopLeft,
+        WindowEdge.North => WlShellSurface.ResizeEnum.Top,
+        WindowEdge.NorthEast => WlShellSurface.ResizeEnum.TopRight,
+        WindowEdge.East => WlShellSurface.ResizeEnum.Right,
+        WindowEdge.SouthEast => WlShellSurface.ResizeEnum.BottomRight,
+        WindowEdge.South => WlShellSurface.ResizeEnum.Bottom,
+        WindowEdge.SouthWest => WlShellSurface.ResizeEnum.BottomLeft,
+        WindowEdge.West => WlShellSurface.ResizeEnum.Left,
+        WindowEdge.NorthWest => WlShellSurface.ResizeEnum.TopLeft,
         _ => throw new ArgumentOutOfRangeException(nameof(windowEdge))
     };
+
+    public void OnPing(WlShellSurface eventSender, uint serial)
+    {
+        eventSender.Pong(serial);
+    }
+
+    public void OnConfigure(WlShellSurface eventSender, uint edges, int width, int height)
+    {
+        Console.WriteLine("WlShellSurface OnConfigure");
+        var size = new PixelSize(width, height);
+        if (size != default)
+            PendingState.Size = size;
+    }
+
+    public void OnPopupDone(WlShellSurface eventSender)
+    {
+    }
+
+    public void OnOnscreenVisibility(QtExtendedSurface eventSender, int visible)
+    {
+        Console.WriteLine($"QtExtendedSurface - OnOnscreenVisibility visible - {visible}");
+        if (AppliedState.VisibleState == visible)
+        {
+            return;
+        }
+
+        switch (visible)
+        {
+            case 5: // FullScreen
+                PendingState.WindowState = WindowState.FullScreen;
+                PendingState.Activated = true;
+                break;
+            case 3: // Minimized
+                PendingState.WindowState = WindowState.Minimized;
+                PendingState.Activated = true;
+                break;
+        }
+        
+        PendingState.VisibleState = visible;
+        ApplyConfigure();
+    }
+
+    public void OnSetGenericProperty(QtExtendedSurface eventSender, string name, ReadOnlySpan<byte> value)
+    {
+        Console.WriteLine($"QtExtendedSurface - OnSetGenericProperty name - {name}");
+    }
+
+    public void OnClose(QtExtendedSurface eventSender)
+    {
+        Console.WriteLine($"QtExtendedSurface - OnClose");
+        Closing?.Invoke(WindowCloseReason.WindowClosing);
+    }
 }

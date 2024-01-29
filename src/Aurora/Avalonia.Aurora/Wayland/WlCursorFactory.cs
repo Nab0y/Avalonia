@@ -15,7 +15,7 @@ internal class WlCursorFactory : ICursorFactory, IDisposable
         var themeName = Environment.GetEnvironmentVariable("XCURSOR_THEME") ?? "default";
         if (!int.TryParse(Environment.GetEnvironmentVariable("XCURSOR_SIZE"), out var themeSize))
             themeSize = 24;
-        _theme = LibWaylandCursor.wl_cursor_theme_load(themeName, themeSize, platform.WlShm.RawPointer); // check
+        _theme = LibWaylandCursor.wl_cursor_theme_load(themeName, themeSize, platform.WlShm.Handle);
         _wlCursorCache = new Dictionary<StandardCursorType, WlCursor> { { StandardCursorType.None, new WlNoCursor() } };
     }
 

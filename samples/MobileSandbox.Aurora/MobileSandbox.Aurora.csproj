@@ -20,9 +20,9 @@
     </ItemGroup>
 
     <!-- Need for build rpm-->
-    <ItemGroup>
-      <PackageReference Include="Packaging.Targets" Version="0.1.*" />
-    </ItemGroup>
+<!--    <ItemGroup>-->
+<!--      <PackageReference Include="Packaging.Targets" Version="0.1.*" />-->
+<!--    </ItemGroup>-->
   
     <ItemGroup>
       <ProjectReference Include="..\..\src\Avalonia.Diagnostics\Avalonia.Diagnostics.csproj" />

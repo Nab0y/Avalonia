@@ -1,84 +1,76 @@
 using Avalonia.Input;
 using Avalonia.Input.TextInput;
-using WaylandSharp;
+using NWayland.Protocols.Aurora.Wayland;
 
-namespace Avalonia.Aurora.Wayland;
-
-internal class WlInputDevice : IDisposable, ITextInputMethodImpl
+namespace Avalonia.Aurora.Wayland
 {
-    private readonly AvaloniaAuroraWaylandPlatform _platform;
-
-    public WlInputDevice(AvaloniaAuroraWaylandPlatform platform)
+    internal class WlInputDevice : WlSeat.IEvents, IDisposable, ITextInputMethodImpl
     {
-        _platform = platform;
-        _platform.WlSeat.Capabilities += WlSeatOnCapabilities;
-    }
+        private readonly AvaloniaAuroraWaylandPlatform _platform;
 
-    private void WlSeatOnCapabilities(object? sender, WlSeat.CapabilitiesEventArgs e)
-    {
-        var capabilities = (WlSeatCapability)e.Capabilities;
-        if (capabilities.HasAllFlags(WlSeatCapability.Pointer))
+        public WlInputDevice(AvaloniaAuroraWaylandPlatform platform)
         {
-            PointerHandler = new WlPointerHandler(_platform, this);
+            _platform = platform;
+            _platform.WlSeat.Events = this;
         }
 
-        //todo: Uncomment
-        // if (capabilities.HasAllFlags(WlSeatCapability.Keyboard))
-        // {
-        //     KeyboardHandler = new WlKeyboardHandler(_platform, this);
-        // }
+        public WlPointerHandler? PointerHandler { get; private set; }
 
-        if (capabilities.HasAllFlags(WlSeatCapability.Touch))
+        public WlKeyboardHandler? KeyboardHandler { get; private set; }
+
+        public WlTouchHandler? TouchHandler { get; private set; }
+
+        public RawInputModifiers RawInputModifiers { get; set; }
+
+        public uint Serial { get; set; }
+
+        public uint UserActionDownSerial { get; set; }
+
+        public void OnCapabilities(WlSeat eventSender, uint capabilities)
         {
-            TouchHandler = new WlTouchHandler(_platform, this);
+            var cap = (WlSeat.CapabilityEnum)capabilities;
+            if (cap.HasAllFlags(WlSeat.CapabilityEnum.Pointer))
+                PointerHandler = new WlPointerHandler(_platform, this);
+            if (cap.HasAllFlags(WlSeat.CapabilityEnum.Keyboard))
+                KeyboardHandler = new WlKeyboardHandler(_platform, this);
+            if (cap.HasAllFlags(WlSeat.CapabilityEnum.Touch))
+                TouchHandler = new WlTouchHandler(_platform, this);
         }
-    }
 
-    public WlPointerHandler? PointerHandler { get; private set; }
+        public void OnName(WlSeat eventSender, string name) { }
 
-    public WlKeyboardHandler? KeyboardHandler { get; private set; }
+        public void Dispose()
+        {
+            PointerHandler?.Dispose();
+            KeyboardHandler?.Dispose();
+            TouchHandler?.Dispose();
+        }
 
-    public WlTouchHandler? TouchHandler { get; private set; }
+        internal void InvalidateFocus(WlWindow window)
+        {
+            PointerHandler?.InvalidateFocus(window);
+            KeyboardHandler?.InvalidateFocus(window);
+            TouchHandler?.InvalidateFocus(window);
+        }
 
-    public RawInputModifiers RawInputModifiers { get; set; }
+        public void SetClient(TextInputMethodClient? client)
+        {
+            //todo: nab0y implement
+        }
 
-    public uint Serial { get; set; }
+        public void SetCursorRect(Rect rect)
+        {
+            //todo: nab0y implement
+        }
 
-    public uint UserActionDownSerial { get; set; }
+        public void SetOptions(TextInputOptions options)
+        {
+            //todo: nab0y implement
+        }
 
-    public void Dispose()
-    {
-        _platform.WlSeat.Capabilities -= WlSeatOnCapabilities;
-        
-        PointerHandler?.Dispose();
-        KeyboardHandler?.Dispose();
-        TouchHandler?.Dispose();
-    }
-
-    internal void InvalidateFocus(WlWindow window)
-    {
-        PointerHandler?.InvalidateFocus(window);
-        KeyboardHandler?.InvalidateFocus(window);
-        TouchHandler?.InvalidateFocus(window);
-    }
-
-    public void SetClient(TextInputMethodClient? client)
-    {
-        //todo: nab0y implement
-    }
-
-    public void SetCursorRect(Rect rect)
-    {
-        //todo: nab0y implement
-    }
-
-    public void SetOptions(TextInputOptions options)
-    {
-        //todo: nab0y implement
-    }
-
-    public void Reset()
-    {
-        //todo: nab0y implement
+        public void Reset()
+        {
+            //todo: nab0y implement
+        }
     }
 }

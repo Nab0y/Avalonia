@@ -1,5 +1,6 @@
 
-using WaylandSharp;
+
+using NWayland.Protocols.Aurora.Wayland;
 
 namespace Avalonia.Aurora.Wayland;
 
@@ -23,8 +24,7 @@ internal unsafe class WlThemeCursor : WlCursor
                 return cachedImage;
             var image = _wlCursor->images[index];
             var bufferPtr = LibWaylandCursor.wl_cursor_image_get_buffer(image);
-            //var wlBuffer = new WlBuffer(bufferPtr, WlBuffer.InterfaceVersion);
-            var wlBuffer = new WlBuffer(bufferPtr);
+            var wlBuffer = new WlBuffer(bufferPtr, WlBuffer.InterfaceVersion);
             var size = new PixelSize((int)image->width, (int)image->height);
             var hotspot = new PixelPoint((int)image->hotspot_x, (int)image->hotspot_y);
             var delay = TimeSpan.FromMilliseconds(image->delay);

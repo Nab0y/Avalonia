@@ -24,7 +24,6 @@ internal class WlPlatformThreading : IControlledDispatcherImpl
         _clock = Stopwatch.StartNew();
         _lock = new object();
         _displayFd = platform.WlDisplay.GetFd();
-        //_displayFd = platform.WlDisplay.RawPointer.ToInt32(); // check
         var fds = stackalloc int[2];
         LibC.pipe2(fds, FileDescriptorFlags.O_NONBLOCK);
         _sigRead = fds[0];

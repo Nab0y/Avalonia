@@ -8,7 +8,9 @@ using Avalonia.Platform;
 using Avalonia.Rendering;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
-using WaylandSharp;
+using NWayland.Protocols.Aurora.SurfaceExtension;
+using NWayland.Protocols.Aurora.Wayland;
+using DBusHelper = Avalonia.Aurora.DBus.DBusHelper;
 
 namespace Avalonia.Aurora.Wayland
 {
@@ -22,18 +24,20 @@ namespace Avalonia.Aurora.Wayland
             WlRegistryHandler = new WlRegistryHandler(registry);
             WlDisplay.Roundtrip();
             
-            WlCompositor = WlRegistryHandler.BindRequiredInterface<WlCompositor>(WlInterface.WlCompositor.Name, WlInterface.WlCompositor.Version);
-            WlSeat = WlRegistryHandler.BindRequiredInterface<WlSeat>(WlInterface.WlSeat.Name, WlInterface.WlSeat.Version);
-            WlShm = WlRegistryHandler.BindRequiredInterface<WlShm>(WlInterface.WlShm.Name, WlInterface.WlShm.Version);
-            WlDataDeviceManager = WlRegistryHandler.BindRequiredInterface<WlDataDeviceManager>(WlInterface.WlDataDeviceManager.Name, WlInterface.WlDataDeviceManager.Version);
-            WlShell = WlRegistryHandler.BindRequiredInterface<WlShell>(WlInterface.WlShell.Name, WlInterface.WlShell.Version);
-            //WpViewporter = WlRegistryHandler.Bind(WpViewporter.BindFactory, WpViewporter.InterfaceName, WpViewporter.InterfaceVersion);
+            WlCompositor = WlRegistryHandler.BindRequiredInterface(WlCompositor.BindFactory, WlCompositor.InterfaceName, WlCompositor.InterfaceVersion);
+            WlSeat = WlRegistryHandler.BindRequiredInterface(WlSeat.BindFactory, WlSeat.InterfaceName, WlSeat.InterfaceVersion);
+            WlShm = WlRegistryHandler.BindRequiredInterface(WlShm.BindFactory, WlShm.InterfaceName, WlShm.InterfaceVersion);
+            WlDataDeviceManager = WlRegistryHandler.BindRequiredInterface(WlDataDeviceManager.BindFactory, WlDataDeviceManager.InterfaceName, WlDataDeviceManager.InterfaceVersion);
+            WlShell = WlRegistryHandler.BindRequiredInterface(WlShell.BindFactory, WlShell.InterfaceName, WlShell.InterfaceVersion);
+            QtSurfaceExtension = WlRegistryHandler.BindRequiredInterface(QtSurfaceExtension.BindFactory, QtSurfaceExtension.InterfaceName, QtSurfaceExtension.InterfaceVersion);
 
             WlScreens = new WlScreens(this);
             WlInputDevice = new WlInputDevice(this);
             WlDataHandler = new WlDataHandler(this);
             WlRawEventGrouper = new WlRawEventGrouper();
 
+            DBusHelper.TryInitialize();
+            
             AvaloniaLocator.CurrentMutable
                 .Bind<IWindowingPlatform>().ToConstant(this)
                 .Bind<IDispatcherImpl>().ToConstant(new WlPlatformThreading(this))
@@ -61,7 +65,7 @@ namespace Avalonia.Aurora.Wayland
                     Egl = new EglInterface(),
                     PlatformType = EGL_PLATFORM_WAYLAND_KHR,
                     //PlatformType = 0x31D7,
-                    PlatformDisplay = WlDisplay.RawPointer, // check
+                    PlatformDisplay = WlDisplay.Handle,
                     SupportsContextSharing = true,
                     SupportsMultipleContexts = true
                 }));
@@ -91,7 +95,7 @@ namespace Avalonia.Aurora.Wayland
 
         internal WlShell WlShell { get; }
 
-        //internal WpViewporter? WpViewporter { get; }
+        internal QtSurfaceExtension QtSurfaceExtension { get; }
 
         internal WlScreens WlScreens { get; }
 
@@ -116,6 +120,49 @@ namespace Avalonia.Aurora.Wayland
 
         //public void OnPing(XdgWmBase eventSender, uint serial) => XdgWmBase.Pong(serial);
 
+        public void ForceRoundTrip()
+        {
+            var ret = 0;
+            var done = false;
+            var callback = WlDisplay.Sync();
+            var callbackHandler = new CallbackHandler(() => { done = true; });
+            callback.Events = callbackHandler;
+            FlushRequests();
+            while (!done && ret >= 0)
+            {
+                ret = WlDisplay.Dispatch();
+            }
+            callback.Dispose();
+        }
+
+        private void FlushRequests()
+        {
+            if (WlDisplay.PrepareRead() == 0)
+            {
+                WlDisplay.ReadEvents();
+            }
+
+            if (WlDisplay.DispatchPending() < 0)
+            {
+                //checkError();
+            }
+
+            WlDisplay.Flush();
+        }
+        
+        private class CallbackHandler : WlCallback.IEvents
+        {
+            private readonly Action _onDoneAction;
+            public CallbackHandler(Action onDoneAction)
+            {
+                _onDoneAction = onDoneAction;
+            }
+            public void OnDone(WlCallback eventSender, uint callbackData)
+            {
+                _onDoneAction.Invoke();
+            }
+        }
+        
         public void Dispose()
         {
             WlDataDeviceManager.Dispose();
@@ -126,6 +173,7 @@ namespace Avalonia.Aurora.Wayland
             WlSeat.Dispose();
             WlShm.Dispose();
             WlShell.Dispose();
+            QtSurfaceExtension.Dispose();
             WlCompositor.Dispose();
             WlRegistryHandler.Dispose();
             WlDisplay.Dispose();

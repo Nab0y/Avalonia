@@ -1,5 +1,5 @@
 using Avalonia.Platform;
-using WaylandSharp;
+using NWayland.Protocols.Aurora.Wayland;
 
 namespace Avalonia.Aurora.Wayland.Framebuffer;
 
