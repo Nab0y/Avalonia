@@ -4,7 +4,7 @@ using NWayland.Protocols.Aurora.Wayland;
 
 namespace Avalonia.Aurora.Wayland
 {
-    internal class WlInputDevice : WlSeat.IEvents, IDisposable, ITextInputMethodImpl
+    internal class WlInputDevice : WlSeat.IEvents, IDisposable
     {
         private readonly AvaloniaAuroraWaylandPlatform _platform;
 
@@ -30,11 +30,19 @@ namespace Avalonia.Aurora.Wayland
         {
             var cap = (WlSeat.CapabilityEnum)capabilities;
             if (cap.HasAllFlags(WlSeat.CapabilityEnum.Pointer))
+            {
                 PointerHandler = new WlPointerHandler(_platform, this);
+            }
+
             if (cap.HasAllFlags(WlSeat.CapabilityEnum.Keyboard))
+            {
                 KeyboardHandler = new WlKeyboardHandler(_platform, this);
+            }
+
             if (cap.HasAllFlags(WlSeat.CapabilityEnum.Touch))
+            {
                 TouchHandler = new WlTouchHandler(_platform, this);
+            }
         }
 
         public void OnName(WlSeat eventSender, string name) { }
@@ -51,26 +59,6 @@ namespace Avalonia.Aurora.Wayland
             PointerHandler?.InvalidateFocus(window);
             KeyboardHandler?.InvalidateFocus(window);
             TouchHandler?.InvalidateFocus(window);
-        }
-
-        public void SetClient(TextInputMethodClient? client)
-        {
-            //todo: nab0y implement
-        }
-
-        public void SetCursorRect(Rect rect)
-        {
-            //todo: nab0y implement
-        }
-
-        public void SetOptions(TextInputOptions options)
-        {
-            //todo: nab0y implement
-        }
-
-        public void Reset()
-        {
-            //todo: nab0y implement
         }
     }
 }

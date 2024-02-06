@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using Avalonia.FreeDesktop;
 
 namespace Avalonia.Aurora.Wayland;
 

@@ -283,6 +283,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aurora", "Aurora", "{96FF02
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Aurora", "src\Aurora\Avalonia.Aurora\Avalonia.Aurora.csproj", "{B629F796-2164-4C25-A609-558A46EF2386}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Aurora.PathProvider", "src\Aurora\Avalonia.Aurora.PathProvider\Avalonia.Aurora.PathProvider.csproj", "{31C13E88-6A39-4E04-B89D-6269A6B1EB12}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -686,6 +688,10 @@ Global
 		{B629F796-2164-4C25-A609-558A46EF2386}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B629F796-2164-4C25-A609-558A46EF2386}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B629F796-2164-4C25-A609-558A46EF2386}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31C13E88-6A39-4E04-B89D-6269A6B1EB12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31C13E88-6A39-4E04-B89D-6269A6B1EB12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31C13E88-6A39-4E04-B89D-6269A6B1EB12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31C13E88-6A39-4E04-B89D-6269A6B1EB12}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -771,6 +777,7 @@ Global
 		{2219A0BE-C1C1-4DD9-BC2E-D907BE180BEA} = {86C53C40-57AA-45B8-AD42-FAE0EFDF0F2B}
 		{140462A1-F5A2-4B83-BB25-67023AA6EDE5} = {9B9E3891-2366-4253-A952-D08BCEB71098}
 		{B629F796-2164-4C25-A609-558A46EF2386} = {96FF024A-C495-4D42-94FE-E5A6EAAF530D}
+		{31C13E88-6A39-4E04-B89D-6269A6B1EB12} = {96FF024A-C495-4D42-94FE-E5A6EAAF530D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {87366D66-1391-4D90-8999-95A620AD786A}

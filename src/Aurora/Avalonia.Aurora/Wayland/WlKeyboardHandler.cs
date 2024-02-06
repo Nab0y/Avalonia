@@ -1,5 +1,4 @@
 using System.Text;
-using Avalonia.FreeDesktop;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
 using Avalonia.Threading;
@@ -44,6 +43,7 @@ namespace Avalonia.Aurora.Wayland
 
         public void OnKeymap(WlKeyboard eventSender, uint format, int fd, uint size)
         {
+            Console.WriteLine("WlKeyboardHandler OnKeymap");
             var map = LibC.mmap(IntPtr.Zero, (int)size, MemoryProtection.PROT_READ, SharingType.MAP_PRIVATE, fd, 0);
             if (map == new IntPtr(-1))
             {

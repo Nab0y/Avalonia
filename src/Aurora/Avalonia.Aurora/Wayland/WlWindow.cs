@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Input.Raw;
-using Avalonia.Input.TextInput;
 using Avalonia.OpenGL.Egl;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
@@ -32,7 +31,7 @@ internal abstract class WlWindow : IWindowBaseImpl, WlSurface.IEvents
     internal struct State
     {
         public int VisibleState;
-        public PixelSize Size = new(720, 1280);
+        public PixelSize Size;
         public PixelPoint Position = default;
         public WindowState WindowState = WindowState.FullScreen;
         public bool HasWindowDecorations = false;
@@ -84,7 +83,7 @@ internal abstract class WlWindow : IWindowBaseImpl, WlSurface.IEvents
 
     public PixelPoint Position => AppliedState.Position;
 
-    public double RenderScaling { get; private set; } = 1;
+    public double RenderScaling { get; protected set; } = 1d;
 
     public double DesktopScaling => RenderScaling;
 
@@ -136,7 +135,8 @@ internal abstract class WlWindow : IWindowBaseImpl, WlSurface.IEvents
 
     public void SetCursor(ICursorImpl? cursor) => _platform.WlInputDevice.PointerHandler?.SetCursor(cursor as WlCursor);
 
-    public IPopupImpl CreatePopup() => new WlPopup(_platform, this);
+    public IPopupImpl CreatePopup() => null!;
+    
 
     public void SetTransparencyLevelHint(IReadOnlyList<WindowTransparencyLevel> transparencyLevels)
     {
@@ -178,8 +178,8 @@ internal abstract class WlWindow : IWindowBaseImpl, WlSurface.IEvents
     {
         if (featureType == typeof(IClipboard))
             return _platform.WlDataHandler;
-        if (featureType == typeof(ITextInputMethodImpl))
-            return _platform.WlInputDevice;
+        // if (featureType == typeof(ITextInputMethodImpl))
+        //     return _platform.WlInputDevice;
         return null;
     }
 
@@ -195,7 +195,7 @@ internal abstract class WlWindow : IWindowBaseImpl, WlSurface.IEvents
             if (AppliedState.Size == default)
             {
                 // AppliedState.Size = new PixelSize(Math.Max((int)(AppliedState.Bounds.Width * 0.75), 300),
-                //     Math.Max((int)(AppliedState.Bounds.Height * 0.7), 200));
+                //      Math.Max((int)(AppliedState.Bounds.Height * 0.7), 200));
                 AppliedState.Size = new PixelSize(720, 1280);
             }
 
@@ -241,7 +241,7 @@ internal abstract class WlWindow : IWindowBaseImpl, WlSurface.IEvents
         }
     }
 
-    private bool TryApplyTransparencyLevel(WindowTransparencyLevel transparencyLevel)
+    protected bool TryApplyTransparencyLevel(WindowTransparencyLevel transparencyLevel)
     {
         if (transparencyLevel == WindowTransparencyLevel.None)
         {

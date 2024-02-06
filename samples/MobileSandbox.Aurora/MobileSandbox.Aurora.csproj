@@ -8,6 +8,7 @@
 
 <!--        <PublishAot>true</PublishAot>-->
         <PublishTrimmed>true</PublishTrimmed>
+        
     </PropertyGroup>
 
     <!-- Need for build rpm-->

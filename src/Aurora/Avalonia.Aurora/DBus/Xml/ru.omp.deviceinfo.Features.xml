@@ -1,0 +1,59 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="ru.omp.deviceinfo.Features">
+    <signal name="cameraEnabledChanged">
+      <arg name="enabled" type="b" direction="out"/>
+    </signal>
+    <method name="hasGNSS">
+      <arg type="b" direction="out"/>
+    </method>
+    <method name="hasNFC">
+      <arg type="b" direction="out"/>
+    </method>
+    <method name="hasBluetooth">
+      <arg type="b" direction="out"/>
+    </method>
+    <method name="hasWlan">
+      <arg type="b" direction="out"/>
+    </method>
+    <method name="getMaxCpuClockSpeed">
+      <arg type="u" direction="out"/>
+    </method>
+    <method name="getNumberCpuCores">
+      <arg type="u" direction="out"/>
+    </method>
+    <method name="getCpuModel">
+      <arg type="s" direction="out"/>
+    </method>
+    <method name="getMaxCpuCoresClockSpeed">
+      <arg type="av" direction="out"/>
+    </method>
+    <method name="getBatteryChargePercentage">
+      <arg type="u" direction="out"/>
+    </method>
+    <method name="getMainCameraResolution">
+      <arg type="d" direction="out"/>
+    </method>
+    <method name="getFrontalCameraResolution">
+      <arg type="d" direction="out"/>
+    </method>
+    <method name="getRamTotalSize">
+      <arg type="t" direction="out"/>
+    </method>
+    <method name="getRamFreeSize">
+      <arg type="t" direction="out"/>
+    </method>
+    <method name="getScreenResolution">
+      <arg type="s" direction="out"/>
+    </method>
+    <method name="getOsVersion">
+      <arg type="s" direction="out"/>
+    </method>
+    <method name="getDeviceModel">
+      <arg type="s" direction="out"/>
+    </method>
+    <method name="getSerialNumber">
+      <arg type="s" direction="out"/>
+    </method>
+  </interface>
+</node>

@@ -38,19 +38,19 @@ namespace Avalonia.Aurora.Wayland
 
         public Task ClearAsync()
         {
-            if (_platform.WlInputDevice.KeyboardHandler is null)
-                return Task.CompletedTask;
-            _wlDataDevice.SetSelection(null, _platform.WlInputDevice.KeyboardHandler.KeyboardEnterSerial);
+            // if (_platform.WlInputDevice.KeyboardHandler is null)
+            //     return Task.CompletedTask;
+            // _wlDataDevice.SetSelection(null, _platform.WlInputDevice.KeyboardHandler.KeyboardEnterSerial);
             return Task.CompletedTask;
         }
 
         public Task SetDataObjectAsync(IDataObject data)
         {
-            if (_platform.WlInputDevice.KeyboardHandler is null)
-                return Task.CompletedTask;
-            var dataSource = _platform.WlDataDeviceManager.CreateDataSource();
-            _currentDataSourceHandler = new WlDataSourceHandler(_platform, dataSource, data);
-            _wlDataDevice.SetSelection(dataSource, _platform.WlInputDevice.KeyboardHandler.KeyboardEnterSerial);
+            // if (_platform.WlInputDevice.KeyboardHandler is null)
+            //     return Task.CompletedTask;
+            // var dataSource = _platform.WlDataDeviceManager.CreateDataSource();
+            // _currentDataSourceHandler = new WlDataSourceHandler(_platform, dataSource, data);
+            // _wlDataDevice.SetSelection(dataSource, _platform.WlInputDevice.KeyboardHandler.KeyboardEnterSerial);
             return Task.CompletedTask;
         }
 

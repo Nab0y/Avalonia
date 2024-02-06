@@ -13,14 +13,21 @@
 <!--    </ItemGroup>-->
   
     <ItemGroup>
-      <ProjectReference Include="..\..\Avalonia.FreeDesktop\Avalonia.FreeDesktop.csproj" />
       <ProjectReference Include="..\..\Avalonia.OpenGL\Avalonia.OpenGL.csproj" />
     </ItemGroup>
   
     <ItemGroup>
-      <PackageReference Include="Tmds.DBus" Version="0.15.0" />
+      <PackageReference Include="Tmds.DBus.Protocol" Version="0.16.0" />
+      <PackageReference Include="Tmds.DBus.SourceGenerator" Version="0.0.11" PrivateAssets="All" />
     </ItemGroup>
-
+  
     <Import Project="../../../build/TrimmingEnable.props" />
     <Import Project="../../../build/NullableEnable.props" />
+
+    <ItemGroup>
+      <AdditionalFiles Include="DBus/Xml/ru.omp.deviceinfo.Features.xml" DBusGeneratorMode="Proxy" />
+      <AdditionalFiles Include="DBus/Xml/org.freedesktop.portal.Settings.xml" DBusGeneratorMode="Proxy"/>
+      <AdditionalFiles Include="DBus/Xml/minputmethodcontext1interface.xml" DBusGeneratorMode="Proxy"/>
+      <AdditionalFiles Include="DBus/Xml/minputmethodserver1interface.xml" DBusGeneratorMode="Proxy"/>
+    </ItemGroup>
 </Project>

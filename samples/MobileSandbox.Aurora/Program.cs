@@ -15,8 +15,11 @@ class Program
     {
         return AppBuilder.Configure<App>()
             .UseAuroraWayland()
-            //.UseWayland()
             .UseSkia()
-            .LogToTrace();
+            .LogToTrace()
+            .With(new AvaloniaNativePlatformOptions()
+            {
+                OverlayPopups = true,
+            });
     }
 }

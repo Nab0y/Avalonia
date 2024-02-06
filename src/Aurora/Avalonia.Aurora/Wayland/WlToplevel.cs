@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Avalonia.Aurora.DBus;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -70,15 +71,19 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
         }
     }
 
-    public override async void Show(bool activate, bool isDialog)
+    public override void Show(bool activate, bool isDialog)
     {
-        var dbusDeviceInfo = new RuOmpDBusDeviceInfo(Connection.System);
-        PendingState.Size = await dbusDeviceInfo.GetScreenResolutionAsync();
-        Console.WriteLine($"screenResolution - {PendingState.Size}");
+        //var dbusDeviceInfo = new RuOmpDBusDeviceInfo(Connection.System);
+        //PendingState.Size = await dbusDeviceInfo.GetScreenResolutionAsync();
+        //Console.WriteLine($"screenResolution - {PendingState.Size}");
+
+        var config = new DConf.Config();
+        var screenResolution = config.GetScreenResolution();
+        Console.WriteLine($"Screen resolution from config - {config.GetScreenResolution()}");
+        PendingState.Size = screenResolution;
         
         _qtExtendedSurface = _platform.QtSurfaceExtension.GetExtendedSurface(WlSurface);
         _qtExtendedSurface.Events = this;
-        Console.WriteLine($"_qtExtendedSurface ver - {_qtExtendedSurface.Version}");
         
         _wlShellSurface = _platform.WlShell.GetShellSurface(WlSurface);
         _wlShellSurface.Events = this;
@@ -91,7 +96,6 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
         }
 
         base.Show(activate, isDialog);
-        //await ShowAsync(activate, isDialog);
     }
 
 
@@ -119,18 +123,7 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
         _wlShellSurface?.SetTitle(title ?? string.Empty);
     }
 
-    public void SetParent(IWindowImpl parent)
-    {
-        if (parent is not WlToplevel wlToplevel || _wlShellSurface is null)
-        {
-            return;
-        }
-
-        //todo: nab0y
-        _wlShellSurface.SetPopup(_platform.WlSeat, _platform.WlInputDevice.Serial, wlToplevel.WlSurface, 0, 0, (uint)WlShellSurface.TransientEnum.Inactive);
-        
-        Parent = wlToplevel;
-    }
+    public void SetParent(IWindowImpl parent) { }
 
     public void SetEnabled(bool enable) { }
 
@@ -164,12 +157,6 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
 
     public void SetMinMaxSize(Size minSize, Size maxSize)
     {
-        // var minX = double.IsInfinity(minSize.Width) ? 0 : (int)minSize.Width;
-        // var minY = double.IsInfinity(minSize.Height) ? 0 : (int)minSize.Height;
-        // var maxX = double.IsInfinity(maxSize.Width) ? 0 : (int)maxSize.Width;
-        // var maxY = double.IsInfinity(maxSize.Height) ? 0 : (int)maxSize.Height;
-        // _minSize = new PixelSize(minX, minY);
-        // _maxSize = new PixelSize(maxX, maxY);
     }
 
     public void SetExtendClientAreaToDecorationsHint(bool extendIntoClientAreaHint)
@@ -232,9 +219,18 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
         base.ApplyConfigure();
 
         if (AppliedState.Activated)
+        {
             Activated?.Invoke();
+        }
+        else
+        {
+            Deactivated?.Invoke();
+        }
+
         if (windowStateChanged)
+        {
             WindowStateChanged?.Invoke(AppliedState.WindowState);
+        }
 
         ExtendClientAreaToDecorationsChanged?.Invoke(IsClientAreaExtendedToDecorations);
         RequestedManagedDecorationsChanged?.Invoke(RequestedManagedDecorations);
@@ -288,7 +284,7 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
                 break;
             case 3: // Minimized
                 PendingState.WindowState = WindowState.Minimized;
-                PendingState.Activated = true;
+                PendingState.Activated = false;
                 break;
         }
         

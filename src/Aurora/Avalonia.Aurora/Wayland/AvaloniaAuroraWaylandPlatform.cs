@@ -1,6 +1,5 @@
+using Avalonia.Aurora.DBus;
 using Avalonia.Aurora.Wayland;
-using Avalonia.Controls.Platform;
-using Avalonia.FreeDesktop;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.OpenGL.Egl;
@@ -8,13 +7,14 @@ using Avalonia.Platform;
 using Avalonia.Rendering;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
+using NWayland.Protocols.Aurora.QtWindowmanager;
 using NWayland.Protocols.Aurora.SurfaceExtension;
 using NWayland.Protocols.Aurora.Wayland;
 using DBusHelper = Avalonia.Aurora.DBus.DBusHelper;
 
 namespace Avalonia.Aurora.Wayland
 {
-    internal class AvaloniaAuroraWaylandPlatform : IWindowingPlatform, IDisposable
+    public class AvaloniaAuroraWaylandPlatform : IWindowingPlatform, IDisposable
     {
         public AvaloniaAuroraWaylandPlatform(AuroraWaylandPlatformOptions options)
         {
@@ -30,12 +30,12 @@ namespace Avalonia.Aurora.Wayland
             WlDataDeviceManager = WlRegistryHandler.BindRequiredInterface(WlDataDeviceManager.BindFactory, WlDataDeviceManager.InterfaceName, WlDataDeviceManager.InterfaceVersion);
             WlShell = WlRegistryHandler.BindRequiredInterface(WlShell.BindFactory, WlShell.InterfaceName, WlShell.InterfaceVersion);
             QtSurfaceExtension = WlRegistryHandler.BindRequiredInterface(QtSurfaceExtension.BindFactory, QtSurfaceExtension.InterfaceName, QtSurfaceExtension.InterfaceVersion);
-
+            
             WlScreens = new WlScreens(this);
             WlInputDevice = new WlInputDevice(this);
             WlDataHandler = new WlDataHandler(this);
             WlRawEventGrouper = new WlRawEventGrouper();
-
+            
             DBusHelper.TryInitialize();
             
             AvaloniaLocator.CurrentMutable
@@ -48,8 +48,8 @@ namespace Avalonia.Aurora.Wayland
                 .Bind<IClipboard>().ToConstant(WlDataHandler)
                 .Bind<IPlatformDragSource>().ToConstant(WlDataHandler)
                 .Bind<IPlatformSettings>().ToSingleton<DBusPlatformSettings>()
-                .Bind<IPlatformIconLoader>().ToConstant(new WlIconLoader())
-                .Bind<IMountedVolumeInfoProvider>().ToConstant(new LinuxMountedVolumeInfoProvider());
+                .Bind<IPlatformIconLoader>().ToConstant(new WlIconLoader());
+                //.Bind<IMountedVolumeInfoProvider>().ToConstant(new LinuxMountedVolumeInfoProvider());
 
             WlDisplay.Roundtrip();
 
@@ -64,7 +64,6 @@ namespace Avalonia.Aurora.Wayland
                 {
                     Egl = new EglInterface(),
                     PlatformType = EGL_PLATFORM_WAYLAND_KHR,
-                    //PlatformType = 0x31D7,
                     PlatformDisplay = WlDisplay.Handle,
                     SupportsContextSharing = true,
                     SupportsMultipleContexts = true
@@ -96,7 +95,7 @@ namespace Avalonia.Aurora.Wayland
         internal WlShell WlShell { get; }
 
         internal QtSurfaceExtension QtSurfaceExtension { get; }
-
+        
         internal WlScreens WlScreens { get; }
 
         internal WlDataHandler WlDataHandler { get; }
@@ -111,58 +110,9 @@ namespace Avalonia.Aurora.Wayland
 
         public ITrayIconImpl? CreateTrayIcon()
         {
-            var dbusTrayIcon = new DBusTrayIconImpl();
-            if (!dbusTrayIcon.IsActive)
-                return null;
-            dbusTrayIcon.IconConverterDelegate = static impl => impl is WlIconData wlIconData ? wlIconData.Data : Array.Empty<uint>();
-            return dbusTrayIcon;
+            return null;
         }
 
-        //public void OnPing(XdgWmBase eventSender, uint serial) => XdgWmBase.Pong(serial);
-
-        public void ForceRoundTrip()
-        {
-            var ret = 0;
-            var done = false;
-            var callback = WlDisplay.Sync();
-            var callbackHandler = new CallbackHandler(() => { done = true; });
-            callback.Events = callbackHandler;
-            FlushRequests();
-            while (!done && ret >= 0)
-            {
-                ret = WlDisplay.Dispatch();
-            }
-            callback.Dispose();
-        }
-
-        private void FlushRequests()
-        {
-            if (WlDisplay.PrepareRead() == 0)
-            {
-                WlDisplay.ReadEvents();
-            }
-
-            if (WlDisplay.DispatchPending() < 0)
-            {
-                //checkError();
-            }
-
-            WlDisplay.Flush();
-        }
-        
-        private class CallbackHandler : WlCallback.IEvents
-        {
-            private readonly Action _onDoneAction;
-            public CallbackHandler(Action onDoneAction)
-            {
-                _onDoneAction = onDoneAction;
-            }
-            public void OnDone(WlCallback eventSender, uint callbackData)
-            {
-                _onDoneAction.Invoke();
-            }
-        }
-        
         public void Dispose()
         {
             WlDataDeviceManager.Dispose();
@@ -188,7 +138,6 @@ namespace Avalonia
         public static AppBuilder UseAuroraWayland(this AppBuilder builder) =>
             builder
                 .UseStandardRuntimePlatformSubsystem()
-                
                 .UseWindowingSubsystem(static () =>
                 {
                     var options = AvaloniaLocator.Current.GetService<AuroraWaylandPlatformOptions>() ?? new AuroraWaylandPlatformOptions();

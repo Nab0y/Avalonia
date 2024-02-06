@@ -1,4 +1,6 @@
-﻿using Tmds.DBus.Protocol;
+﻿
+using Tmds.DBus.Protocol;
+using Tmds.DBus.SourceGenerator;
 
 namespace Avalonia.Aurora.DBus;
 
@@ -67,15 +69,6 @@ internal class RuOmpDBusDeviceInfo
             return reader.ReadUInt32();
         });
     }
-    
-    // public Task<object[]> GetMaxCpuCoresClockSpeedAsync()
-    // {
-    //     return _connection.CallMethodAsync(CreateMessage("getMaxCpuCoresClockSpeed"), (message, state) =>
-    //     {
-    //         var reader = message.GetBodyReader();
-    //         return reader.ReadArray<object>();
-    //     });
-    // }
     
     public Task<uint> GetNumberCpuCoresAsync()
     {
