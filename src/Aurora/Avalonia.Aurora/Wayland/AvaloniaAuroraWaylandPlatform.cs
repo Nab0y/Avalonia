@@ -1,4 +1,5 @@
 using Avalonia.Aurora.DBus;
+using Avalonia.Aurora.DConf;
 using Avalonia.Aurora.Wayland;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -48,9 +49,10 @@ namespace Avalonia.Aurora.Wayland
                 .Bind<IClipboard>().ToConstant(WlDataHandler)
                 .Bind<IPlatformDragSource>().ToConstant(WlDataHandler)
                 .Bind<IPlatformSettings>().ToSingleton<DBusPlatformSettings>()
-                .Bind<IPlatformIconLoader>().ToConstant(new WlIconLoader());
+                .Bind<IPlatformIconLoader>().ToConstant(new WlIconLoader())
+                .Bind<Config>().ToConstant(new Config());
                 //.Bind<IMountedVolumeInfoProvider>().ToConstant(new LinuxMountedVolumeInfoProvider());
-
+               
             WlDisplay.Roundtrip();
 
             DBusHelper.TryInitialize();

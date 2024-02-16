@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Avalonia.Aurora.DBus;
+using Avalonia.Aurora.DConf;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform;
@@ -22,7 +23,6 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
     public WlToplevel(AvaloniaAuroraWaylandPlatform platform) : base(platform)
     {
         _platform = platform;
-        
     }
 
     public Func<WindowCloseReason, bool>? Closing { get; set; }
@@ -77,9 +77,9 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
         //PendingState.Size = await dbusDeviceInfo.GetScreenResolutionAsync();
         //Console.WriteLine($"screenResolution - {PendingState.Size}");
 
-        var config = new DConf.Config();
-        var screenResolution = config.GetScreenResolution();
-        Console.WriteLine($"Screen resolution from config - {config.GetScreenResolution()}");
+        var config = AvaloniaLocator.CurrentMutable.GetService<Config>();
+        var screenResolution = config!.GetScreenResolution();
+        Console.WriteLine($"Screen resolution from config - {screenResolution}");
         PendingState.Size = screenResolution;
         
         _qtExtendedSurface = _platform.QtSurfaceExtension.GetExtendedSurface(WlSurface);
@@ -300,6 +300,6 @@ internal class WlToplevel : WlWindow, IWindowImpl, WlShellSurface.IEvents, QtExt
     public void OnClose(QtExtendedSurface eventSender)
     {
         Console.WriteLine($"QtExtendedSurface - OnClose");
-        Closing?.Invoke(WindowCloseReason.WindowClosing);
+        Closing?.Invoke(WindowCloseReason.ApplicationShutdown);
     }
 }
